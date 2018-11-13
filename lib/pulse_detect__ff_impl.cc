@@ -69,10 +69,10 @@ namespace gr {
       float *out = (float *) output_items[0];
 
       for (int i=0; i<noutput_items; i++) {
-        out[i] = in[i];
+        out[i] = 0; // no pulse detected
 
         float pulseValue = in[0];
-        if (isnan(pulseValue)) {
+        if (std::isnan(pulseValue)) {
           continue;
         }
 
@@ -96,9 +96,13 @@ namespace gr {
             _pulseMax = pulseValue;
           }
         } else if (_pulseSampleCount != 0) {
-          _lastPulseSeconds = lastSampleSeconds;
-          printf("True pulse detected pulseMax:secs:length:backgroundNoise %f %f %f %f\n",
-                _pulseMax, _lastPulseSeconds, _pulseSampleCount / _sampleRate * 1000.0, _backgroundNoise);
+          double pulseLength = _pulseSampleCount / _sampleRate * 1000.0;
+          if (pulseLength > 9.0) {
+            _lastPulseSeconds = lastSampleSeconds;
+            out[i] = _pulseMax;
+            printf("True pulse detected pulseMax:secs:length:backgroundNoise %f %f %f %f\n",
+                  _pulseMax, _lastPulseSeconds, pulseLength, _backgroundNoise);
+          }
           _pulseSampleCount = 0;
           _pulseMax = 0;
         } else {
