@@ -45,7 +45,7 @@ namespace gr {
       , _pulseSampleCount     (0)
       , _backgroundNoise      (1000)
       , _pulseMax             (-1)
-      , _risingThreshold      (5)
+      , _risingThreshold      (2)
       , _fallingThreshold     (0.8)
       , _lastPulseSeconds     (0)
       , _trackingPossiblePulse(false)
