@@ -32,11 +32,15 @@ namespace gr {
       int     _sampleCount;
       double  _sampleRate;
       int     _pulseSampleCount;
-      float   _pulseTriggerValue;
       float   _backgroundNoise;
-      float   _snrThreshold;
+      float   _backgroundNoisePulseStart;
       float   _pulseMax;
+      float   _risingThreshold;
+      float   _fallingThreshold;
       double  _lastPulseSeconds;
+      bool    _trackingPossiblePulse;
+      bool    _pulseComplete;
+      const double  _noPulseTime;
 
      public:
       pulse_detect__ff_impl();

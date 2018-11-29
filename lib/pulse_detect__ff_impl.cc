@@ -39,15 +39,18 @@ namespace gr {
      * The private constructor
      */
     pulse_detect__ff_impl::pulse_detect__ff_impl()
-      : gr::sync_block    ("pulse_detect__ff", gr::io_signature::make(1, 1, sizeof(float)), gr::io_signature::make(1, 1, sizeof(float)))
-      , _sampleCount      (0)
-      , _sampleRate       (3000000.0 / 256.0)
-      , _pulseSampleCount (0)
-      , _pulseTriggerValue(0)
-      , _backgroundNoise  (1000)
-      , _snrThreshold     (5)
-      , _pulseMax         (0)
-      , _lastPulseSeconds (0)
+      : gr::sync_block        ("pulse_detect__ff", gr::io_signature::make(1, 1, sizeof(float)), gr::io_signature::make(1, 1, sizeof(float)))
+      , _sampleCount          (0)
+      , _sampleRate           (3000000.0 / 256.0)
+      , _pulseSampleCount     (0)
+      , _backgroundNoise      (1000)
+      , _pulseMax             (-1)
+      , _risingThreshold      (5)
+      , _fallingThreshold     (0.8)
+      , _lastPulseSeconds     (0)
+      , _trackingPossiblePulse(false)
+      , _pulseComplete        (false)
+      , _noPulseTime          (3)
     {
 
     }
@@ -78,40 +81,52 @@ namespace gr {
 
         _sampleCount++;
 
-        double lastSampleSeconds = _sampleCount / _sampleRate;
-        bool pulseTriggered = false;
+        bool pulseRising = false; // Tracks the pulse going up and will go false when the pulse begins to fall back down
+        double curSampleSeconds = _sampleCount / _sampleRate;
 
-        if (_pulseSampleCount != 0) {
-          if (pulseValue >= _pulseTriggerValue) {
-            pulseTriggered = true;
-          }
-        } else if (pulseValue > _backgroundNoise * _snrThreshold) {
-          _pulseTriggerValue = pulseValue;
-          pulseTriggered = true;
-        }
-
-        if (pulseTriggered) {
-          _pulseSampleCount++;
-          if (pulseValue > _pulseMax) {
+        if (_trackingPossiblePulse) {
+          // Look for a drop in signal larger than threshold
+          if (pulseValue < _pulseMax * _fallingThreshold) {
+            _pulseComplete = true;
+            printf("Pulse stop pulseValue(%f) _pulseSampleCount(%d)\n", pulseValue, _pulseSampleCount);
+          } else if (pulseValue > _pulseMax) {
             _pulseMax = pulseValue;
           }
-        } else if (_pulseSampleCount != 0) {
+          _pulseSampleCount++;
+        } else if (pulseValue > _backgroundNoise * _risingThreshold) {
+          _trackingPossiblePulse = true;
+          _pulseMax = pulseValue;
+          _pulseSampleCount = 1;
+          _backgroundNoisePulseStart = _backgroundNoise;
+          printf("Pulse start pulseValue(%f) backgroundNoise(%f)\n", pulseValue, _backgroundNoise);
+        }
+
+        if (_trackingPossiblePulse && _pulseComplete) {
           double pulseLength = _pulseSampleCount / _sampleRate * 1000.0;
-          if (pulseLength > 9.0) {
-            _lastPulseSeconds = lastSampleSeconds;
+          if (true /*pulseLength > 20.0*/) {
+            _lastPulseSeconds = curSampleSeconds;
             out[i] = _pulseMax;
-            printf("True pulse detected pulseMax:secs:length:backgroundNoise %f %f %f %f\n",
-                  _pulseMax, _lastPulseSeconds, pulseLength, _backgroundNoise);
+            printf("Full Pulse pulseMax(%f) length(%f) backgroundNoise(%f)\n",
+                  _pulseMax, pulseLength, _backgroundNoise);
+          } else {
+            printf("Short pulse pulseMax(%f) length(%f) backgroundNoise(%f)\n",
+                  _pulseMax, pulseLength, _backgroundNoise);            
           }
+          _trackingPossiblePulse = false;
+          _pulseComplete = false;
           _pulseSampleCount = 0;
-          _pulseMax = 0;
+          _pulseMax = -1;
         } else {
           _backgroundNoise = (_backgroundNoise * 0.99) + (pulseValue * 0.01);
         }
 
-        if (lastSampleSeconds > _lastPulseSeconds + 2.1) {
-          _lastPulseSeconds = lastSampleSeconds;
-          printf("No pulse for 2.1 seconds\n");
+        if (curSampleSeconds > _lastPulseSeconds + _noPulseTime) {
+          _lastPulseSeconds = curSampleSeconds;
+          _trackingPossiblePulse = false;
+          _pulseComplete = false;
+          _pulseSampleCount = 0;
+          _pulseMax = -1;
+          printf("No pulse for %f seconds backgroundNoise(%f) _pulseSampleCount(%d)\n", _noPulseTime, _backgroundNoise, _pulseSampleCount);
         }
       }
 
