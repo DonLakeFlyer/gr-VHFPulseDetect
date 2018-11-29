@@ -74,7 +74,7 @@ namespace gr {
       for (int i=0; i<noutput_items; i++) {
         out[i] = 0; // no pulse detected
 
-        float pulseValue = in[0];
+        float pulseValue = in[i];
         if (std::isnan(pulseValue)) {
           continue;
         }
@@ -126,7 +126,7 @@ namespace gr {
           _pulseComplete = false;
           _pulseSampleCount = 0;
           _pulseMax = -1;
-          printf("No pulse for %f seconds backgroundNoise(%f) _pulseSampleCount(%d)\n", _noPulseTime, _backgroundNoise, _pulseSampleCount);
+          printf("No pulse for %f seconds backgroundNoise(%f) pulseValue(%f)\n", _noPulseTime, _backgroundNoise, pulseValue);
         }
       }
 
