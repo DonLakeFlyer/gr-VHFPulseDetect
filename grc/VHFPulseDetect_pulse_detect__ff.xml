@@ -22,7 +22,27 @@
        * vlen
        * optional (set to 1 for optional inputs) -->
   <source>
-    <name>out</name>
+    <name>pulseDetect</name>
+    <type>float</type>
+  </source>
+  <source>
+    <name>pulse</name>
+    <type>float</type>
+  </source>
+  <source>
+    <name>movingAverage</name>
+    <type>float</type>
+  </source>
+  <source>
+    <name>movingVariance</name>
+    <type>float</type>
+  </source>
+  <source>
+    <name>movingStdDev</name>
+    <type>float</type>
+  </source>
+  <source>
+    <name>threshold</name>
     <type>float</type>
   </source>
 </block>

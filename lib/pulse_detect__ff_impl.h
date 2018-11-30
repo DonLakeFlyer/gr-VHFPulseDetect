@@ -42,13 +42,15 @@ namespace gr {
       bool    _pulseComplete;
       const double  _noPulseTime;
 
-      static const int _cLagWindow = 175;
+      static const int _cLagWindow = 175 * 5;
 
       double _influence;
       double _threshold;
       double _movingAvg;
       double _movingVariance;
       double _movingStdDev;
+      double _lockedAvg;
+      double _lockedStdDev;
       double _rgMovingAvg[_cLagWindow];
       double _rgMovingAvgPart[_cLagWindow];
       double _rgMovingVariancePart[_cLagWindow];
