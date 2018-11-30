@@ -32,7 +32,7 @@ namespace gr {
       int     _sampleCount;
       double  _sampleRate;
       int     _pulseSampleCount;
-      float   _backgroundNoise;
+      double  _backgroundNoise;
       float   _backgroundNoisePulseStart;
       float   _pulseMax;
       float   _risingThreshold;
@@ -41,6 +41,19 @@ namespace gr {
       bool    _trackingPossiblePulse;
       bool    _pulseComplete;
       const double  _noPulseTime;
+
+      static const int _cLagWindow = 175;
+
+      double _influence;
+      double _threshold;
+      double _movingAvg;
+      double _movingVariance;
+      double _movingStdDev;
+      double _rgMovingAvg[_cLagWindow];
+      double _rgMovingAvgPart[_cLagWindow];
+      double _rgMovingVariancePart[_cLagWindow];
+      double _lastFilteredPulse;      
+      int    _nextLagWindowIndex;
 
      public:
       pulse_detect__ff_impl();
