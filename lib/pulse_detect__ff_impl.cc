@@ -92,19 +92,15 @@ pulse_detect__ff_impl::pulse_detect__ff_impl()
     , _pulseComplete        (false)
     , _noPulseTime          (3)
 
-    , _influence            (0)
     , _threshold            (4.0)
     , _movingAvg            (0)
     , _movingVariance       (0)
     , _movingStdDev         (0)
-    , _lockedAvg            (0)
-    , _lockedStdDev         (0)
-    , _lastFilteredPulse    (0)
     , _nextLagWindowIndex   (0)
 {
     memset(_rgMovingAvg,          0, sizeof(_rgMovingAvg));
     memset(_rgMovingAvgPart,      0, sizeof(_rgMovingAvgPart));
-    memset(_rgMovingVariancePart,   0, sizeof(_rgMovingVariancePart));
+    memset(_rgMovingVariancePart, 0, sizeof(_rgMovingVariancePart));
 }
 
 
@@ -132,46 +128,34 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
             continue;
         }
 
-        double filteredPulse = pulseValue;
         double usedAvg, usedStdDev;
         bool lagWindowFull = _nextLagWindowIndex == _cLagWindow;
 
         if (lagWindowFull) {
             if (_trackingPossiblePulse) {
-                usedAvg =     _lockedAvg;
-                usedStdDev =  _lockedStdDev;
-            } else {
-                usedAvg =     _movingAvg;
-                usedStdDev =  _movingStdDev;
-            }
-            if (pulseValue - usedAvg > _threshold * usedStdDev) {
-                if (!_trackingPossiblePulse) {
-                  printf("Leading edge pulseValue(%f)\n", pulseValue);
-                  _trackingPossiblePulse =  true;
-                  _lockedAvg =              _movingAvg;
-                  _lockedStdDev =           _movingStdDev;
-                }
-
-                if (pulseValue > _pulseMax) {
+                if (pulseValue - _movingAvg < _threshold * _movingStdDev) {
+                    if (_pulseSampleCount > _cMinPulseSampleCount) {
+                        printf("Trailing edge pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
+                        rgOutPulseDetect[i] = _pulseMax;
+                    } else {
+                        printf("Short pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
+                    }
+                    _trackingPossiblePulse = false;
+                    _pulseMax = 0;
+                    _pulseSampleCount = 0;
+                } else {
                     _pulseMax = pulseValue;
+                    _pulseSampleCount++;
                 }
-
-                //# Make influence lower
-                //set filteredY(i) to influence*y(i) + (1-influence)*filteredY(i-1);
-                filteredPulse = (_influence * pulseValue) + ((1.0 - _influence) * _lastFilteredPulse);
-                //filteredPulse = pulseValue;
             } else {
-              if (_trackingPossiblePulse) {
-                  printf("Trailing edge pulseValue(%f) pulseMax(%f)\n", pulseValue, _pulseMax);
-                  rgOutPulseDetect[i] = _pulseMax;
-                  _trackingPossiblePulse = false;
-                  _pulseMax = 0;
-              }
-              filteredPulse = pulseValue;
+                if (pulseValue - _movingAvg > _threshold * _movingStdDev) {
+                    printf("Leading edge pulseValue(%f)\n", pulseValue);
+                    _trackingPossiblePulse =  true;
+                    _pulseMax = pulseValue;
+                    _pulseSampleCount = 1;
+                }
             }
         }
-
-        _lastFilteredPulse = filteredPulse;
 
         // Update moving average
         int lastMovingIndex = 0;
@@ -182,7 +166,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         } else {
             lastMovingIndex = _nextLagWindowIndex;
         }
-        double movingPart = filteredPulse / static_cast<double>(_cLagWindow);
+        double movingPart = pulseValue / static_cast<double>(_cLagWindow);
         _movingAvg += movingPart;
         _rgMovingAvgPart[lastMovingIndex] = movingPart;
         _rgMovingAvg[lastMovingIndex] = _movingAvg;
@@ -195,7 +179,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         } else {
             lastMovingIndex = _nextLagWindowIndex;
         }
-        movingPart = pow(filteredPulse - _rgMovingAvg[lastMovingIndex], 2);
+        movingPart = pow(pulseValue - _rgMovingAvg[lastMovingIndex], 2);
         _movingVariance += movingPart;
         _rgMovingVariancePart[lastMovingIndex] = movingPart;
         _movingStdDev = sqrt(_movingVariance / static_cast<double>(_cLagWindow));
@@ -205,10 +189,10 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         }
 
         rgOutPulseValue[i] =    pulseValue;
-        rgOutMovingAvg[i] =     usedAvg;
+        rgOutMovingAvg[i] =     _movingAvg;
         rgOutMovingVar[i] =     _movingVariance / static_cast<double>(_cLagWindow);
-        rgOutMovingStdDev[i] =  usedStdDev;
-        rgOutThreshold[i] =     usedAvg + (_threshold * usedStdDev);
+        rgOutMovingStdDev[i] =  _movingStdDev;
+        rgOutThreshold[i] =     _movingAvg + (_threshold * _movingStdDev);
 
         //printf("%f %f %f %f\n", pulseValue, _movingAvg, _movingVariance / static_cast<double>(_cLagWindow), _movingStdDev);
     }
