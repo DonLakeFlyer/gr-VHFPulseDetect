@@ -38,11 +38,11 @@ namespace gr {
            gr_vector_void_star &output_items);
 
      private:
-        static const double _noPulseTime =          3.0;
         static const int    _cLagWindow =           175 * 20;
         static const int    _cMinPulseSampleCount = 100;
 
         unsigned int _sampleCount;
+        double  _noPulseTime;
         double  _sampleRate;
         int     _pulseSampleCount;
         float   _pulseMax;
