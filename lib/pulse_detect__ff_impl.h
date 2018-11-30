@@ -28,40 +28,34 @@ namespace gr {
 
     class pulse_detect__ff_impl : public pulse_detect__ff
     {
-     private:
-      int     _sampleCount;
-      double  _sampleRate;
-      int     _pulseSampleCount;
-      double  _backgroundNoise;
-      float   _backgroundNoisePulseStart;
-      float   _pulseMax;
-      float   _risingThreshold;
-      float   _fallingThreshold;
-      double  _lastPulseSeconds;
-      bool    _trackingPossiblePulse;
-      bool    _pulseComplete;
-      const double  _noPulseTime;
-
-      static const int _cLagWindow = 175 * 20;
-      static const int _cMinPulseSampleCount = 100;
-
-      double _threshold;
-      double _movingAvg;
-      double _movingVariance;
-      double _movingStdDev;
-      double _rgMovingAvg[_cLagWindow];
-      double _rgMovingAvgPart[_cLagWindow];
-      double _rgMovingVariancePart[_cLagWindow];
-      int    _nextLagWindowIndex;
-
      public:
-      pulse_detect__ff_impl();
-      ~pulse_detect__ff_impl();
+        pulse_detect__ff_impl();
+        ~pulse_detect__ff_impl();
 
-      // Where all the action really happens
-      int work(int noutput_items,
-         gr_vector_const_void_star &input_items,
-         gr_vector_void_star &output_items);
+        // Where all the action really happens
+        int work(int noutput_items,
+           gr_vector_const_void_star &input_items,
+           gr_vector_void_star &output_items);
+
+     private:
+        static const double _noPulseTime =          3.0;
+        static const int    _cLagWindow =           175 * 20;
+        static const int    _cMinPulseSampleCount = 100;
+
+        unsigned int _sampleCount;
+        double  _sampleRate;
+        int     _pulseSampleCount;
+        float   _pulseMax;
+        double  _lastPulseSeconds;
+        bool    _trackingPossiblePulse;
+        double  _threshold;
+        double  _movingAvg;
+        double  _movingVariance;
+        double  _movingStdDev;
+        double  _rgMovingAvg[_cLagWindow];
+        double  _rgMovingAvgPart[_cLagWindow];
+        double  _rgMovingVariancePart[_cLagWindow];
+        int     _nextLagWindowIndex;
     };
 
   } // namespace VHFPulseDetect

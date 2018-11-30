@@ -41,6 +41,8 @@ pulse_detect__ff_impl::~pulse_detect__ff_impl()
 #if 0
     # https://stackoverflow.com/questions/22583391/peak-signal-detection-in-realtime-timeseries-data/22640362#22640362
 
+    We sort of follow this algorithm
+
     # Let y be a vector of timeseries data of at least length lag+2
     # Let mean() be a function that calculates the mean
     # Let std() be a function that calculates the standard deviaton
@@ -83,15 +85,9 @@ pulse_detect__ff_impl::pulse_detect__ff_impl()
     , _sampleCount          (0)
     , _sampleRate           (3000000.0 / 256.0)
     , _pulseSampleCount     (0)
-    , _backgroundNoise      (1000)
     , _pulseMax             (0)
-    , _risingThreshold      (1.5)
-    , _fallingThreshold     (0.8)
     , _lastPulseSeconds     (0)
     , _trackingPossiblePulse(false)
-    , _pulseComplete        (false)
-    , _noPulseTime          (3)
-
     , _threshold            (4.0)
     , _movingAvg            (0)
     , _movingVariance       (0)
@@ -123,10 +119,14 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         rgOutMovingStdDev[i] =  0;
         rgOutThreshold[i] =     0;
 
+        _sampleCount++;
+
         double pulseValue = in[i];
         if (std::isnan(pulseValue)) {
             continue;
         }
+
+        double curSampleSeconds = _sampleCount / _sampleRate; 
 
         double usedAvg, usedStdDev;
         bool lagWindowFull = _nextLagWindowIndex == _cLagWindow;
@@ -137,6 +137,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
                     if (_pulseSampleCount > _cMinPulseSampleCount) {
                         printf("Trailing edge pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
                         rgOutPulseDetect[i] = _pulseMax;
+                        _lastPulseSeconds = curSampleSeconds;
                     } else {
                         printf("Short pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
                     }
@@ -194,104 +195,19 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         rgOutMovingStdDev[i] =  _movingStdDev;
         rgOutThreshold[i] =     _movingAvg + (_threshold * _movingStdDev);
 
+        if (curSampleSeconds - _lastPulseSeconds > _noPulseTime) {
+            _lastPulseSeconds = curSampleSeconds; 
+            _trackingPossiblePulse = false; 
+            _pulseSampleCount = 0; 
+            _pulseMax = 0; 
+            printf("No pulse for %f seconds\n", _noPulseTime); 
+        } 
+
         //printf("%f %f %f %f\n", pulseValue, _movingAvg, _movingVariance / static_cast<double>(_cLagWindow), _movingStdDev);
     }
 
     return noutput_items;
 }
-
-#if 0
-    /*
-     * The private constructor
-     */
-    pulse_detect__ff_impl::pulse_detect__ff_impl()
-      : gr::sync_block        ("pulse_detect__ff", gr::io_signature::make(1, 1, sizeof(float)), gr::io_signature::make(1, 1, sizeof(float)))
-      , _sampleCount          (0)
-      , _sampleRate           (3000000.0 / 256.0)
-      , _pulseSampleCount     (0)
-      , _backgroundNoise      (1000)
-      , _pulseMax             (-1)
-      , _risingThreshold      (1.5)
-      , _fallingThreshold     (0.8)
-      , _lastPulseSeconds     (0)
-      , _trackingPossiblePulse(false)
-      , _pulseComplete        (false)
-      , _noPulseTime          (3)
-    {
-
-    }
-
-    int
-    pulse_detect__ff_impl::work(int noutput_items,
-        gr_vector_const_void_star &input_items,
-        gr_vector_void_star &output_items)
-    {
-      const float *in = (const float *) input_items[0];
-      float *out = (float *) output_items[0];
-
-      for (int i=0; i<noutput_items; i++) {
-        out[i] = 0; // no pulse detected
-
-        float pulseValue = in[i];
-        if (std::isnan(pulseValue)) {
-          continue;
-        }
-
-        _sampleCount++;
-
-        bool pulseRising = false; // Tracks the pulse going up and will go false when the pulse begins to fall back down
-        double curSampleSeconds = _sampleCount / _sampleRate;
-
-        if (_trackingPossiblePulse) {
-          // Look for a drop in signal larger than threshold
-          if (pulseValue < _pulseMax * _fallingThreshold) {
-            _pulseComplete = true;
-            printf("Pulse stop pulseValue(%f) _pulseSampleCount(%d)\n", pulseValue, _pulseSampleCount);
-          } else if (pulseValue > _pulseMax) {
-            _pulseMax = pulseValue;
-          }
-          _pulseSampleCount++;
-        } else if (pulseValue > _backgroundNoise * _risingThreshold) {
-          _trackingPossiblePulse = true;
-          _pulseMax = pulseValue;
-          _pulseSampleCount = 1;
-          _backgroundNoisePulseStart = _backgroundNoise;
-          printf("Pulse start pulseValue(%f) backgroundNoise(%f)\n", pulseValue, _backgroundNoise);
-        }
-
-        if (_trackingPossiblePulse && _pulseComplete) {
-          double pulseLength = _pulseSampleCount / _sampleRate * 1000.0;
-          if (true /*pulseLength > 20.0*/) {
-            _lastPulseSeconds = curSampleSeconds;
-            out[i] = _pulseMax;
-            printf("Full Pulse pulseMax(%f) length(%f) backgroundNoise(%f)\n",
-                  _pulseMax, pulseLength, _backgroundNoise);
-          } else {
-            printf("Short pulse pulseMax(%f) length(%f) backgroundNoise(%f)\n",
-                  _pulseMax, pulseLength, _backgroundNoise);            
-          }
-          _trackingPossiblePulse = false;
-          _pulseComplete = false;
-          _pulseSampleCount = 0;
-          _pulseMax = -1;
-        } else {
-          _backgroundNoise = (_backgroundNoise * 0.999) + (pulseValue * 0.001);
-        }
-
-        if (curSampleSeconds > _lastPulseSeconds + _noPulseTime) {
-          _lastPulseSeconds = curSampleSeconds;
-          _trackingPossiblePulse = false;
-          _pulseComplete = false;
-          _pulseSampleCount = 0;
-          _pulseMax = -1;
-          printf("No pulse for %f seconds backgroundNoise(%f) pulseValue(%f)\n", _noPulseTime, _backgroundNoise, pulseValue);
-        }
-      }
-
-      // Tell runtime system how many output items we produced.
-      return noutput_items;
-    }
-#endif    
 
   } /* namespace VHFPulseDetect */
 } /* namespace gr */
