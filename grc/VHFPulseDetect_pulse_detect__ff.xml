@@ -4,7 +4,22 @@
   <key>VHFPulseDetect_pulse_detect__ff</key>
   <category>VHFPulseDetect</category>
   <import>import VHFPulseDetect</import>
-  <make>VHFPulseDetect.pulse_detect__ff()</make>
+  <make>VHFPulseDetect.pulse_detect__ff($threshold, $minSamplesForPulse)</make>
+  <callback>set_threshold($threshold)</callback>
+  <callback>set_minSamplesForPulse($minSamplesForPulse)</callback>
+
+  <param>
+    <name>Threshold</name>
+    <key>threshold</key>
+    <value>4.0</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>Min samples for pulse</name>
+    <key>minSamplesForPulse</key>
+    <value>150</value>
+    <type>int</type>
+  </param>
 
   <!-- Make one 'sink' node per input. Sub-nodes:
        * name (an identifier for the GUI)

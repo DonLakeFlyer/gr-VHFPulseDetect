@@ -38,15 +38,13 @@ namespace gr {
      public:
       typedef boost::shared_ptr<pulse_detect__ff> sptr;
 
-      /*!
-       * \brief Return a shared_ptr to a new instance of VHFPulseDetect::pulse_detect__ff.
-       *
-       * To avoid accidental use of raw pointers, VHFPulseDetect::pulse_detect__ff's
-       * constructor is in a private implementation
-       * class. VHFPulseDetect::pulse_detect__ff::make is the public interface for
-       * creating new instances.
-       */
-      static sptr make();
+      static sptr make(float threshold, int minSamplesForPulse);
+
+      virtual float threshold() const = 0;
+      virtual void set_threshold(float threshold) = 0;
+
+      virtual int minSamplesForPulse() const = 0;
+      virtual void set_minSamplesForPulse(int minSamplesForPulse) = 0;
     };
 
   } // namespace VHFPulseDetect

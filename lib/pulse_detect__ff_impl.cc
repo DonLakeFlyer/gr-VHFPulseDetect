@@ -27,9 +27,9 @@
 
 namespace gr { namespace VHFPulseDetect {
 
-pulse_detect__ff::sptr pulse_detect__ff::make()
+pulse_detect__ff::sptr pulse_detect__ff::make(float threshold, int minSamplesForPulse)
 {
-    return gnuradio::get_initial_sptr (new pulse_detect__ff_impl());
+    return gnuradio::get_initial_sptr (new pulse_detect__ff_impl(threshold, minSamplesForPulse));
 }
 
 
@@ -80,8 +80,9 @@ pulse_detect__ff_impl::~pulse_detect__ff_impl()
     end
 #endif
 
-pulse_detect__ff_impl::pulse_detect__ff_impl()
+pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, int minSamplesForPulse)
     : gr::sync_block        ("pulse_detect__ff", gr::io_signature::make(1, 1, sizeof(float)), gr::io_signature::make(6, 6, sizeof(float)))
+    , _minSamplesForPulse   (minSamplesForPulse)
     , _sampleCount          (0)
     , _noPulseTime          (3)
     , _sampleRate           (3000000.0 / 256.0)
@@ -89,7 +90,7 @@ pulse_detect__ff_impl::pulse_detect__ff_impl()
     , _pulseMax             (0)
     , _lastPulseSeconds     (0)
     , _trackingPossiblePulse(false)
-    , _threshold            (4.0)
+    , _threshold            (threshold)
     , _movingAvg            (0)
     , _movingVariance       (0)
     , _movingStdDev         (0)
@@ -135,7 +136,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         if (lagWindowFull) {
             if (_trackingPossiblePulse) {
                 if (pulseValue - _movingAvg < _threshold * _movingStdDev) {
-                    if (_pulseSampleCount > _cMinPulseSampleCount) {
+                    if (_pulseSampleCount > _minSamplesForPulse) {
                         printf("Trailing edge pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
                         rgOutPulseDetect[i] = _pulseMax;
                         _lastPulseSeconds = curSampleSeconds;
