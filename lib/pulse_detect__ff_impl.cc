@@ -141,7 +141,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
                         rgOutPulseDetect[i] = _pulseMax;
                         _lastPulseSeconds = curSampleSeconds;
                     } else {
-                        printf("Short pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
+                        //printf("Short pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
                     }
                     _trackingPossiblePulse = false;
                     _pulseMax = 0;
@@ -152,7 +152,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
                 }
             } else {
                 if (pulseValue - _movingAvg > _threshold * _movingStdDev) {
-                    printf("Leading edge pulseValue(%f)\n", pulseValue);
+                    //printf("Leading edge pulseValue(%f)\n", pulseValue);
                     _trackingPossiblePulse =  true;
                     _pulseMax = pulseValue;
                     _pulseSampleCount = 1;
