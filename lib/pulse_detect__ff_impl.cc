@@ -147,7 +147,9 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
                     _pulseMax = 0;
                     _pulseSampleCount = 0;
                 } else {
-                    _pulseMax = pulseValue;
+                    if (pulseValue > _pulseMax) {
+                        _pulseMax = pulseValue;
+                    }
                     _pulseSampleCount++;
                 }
             } else {
