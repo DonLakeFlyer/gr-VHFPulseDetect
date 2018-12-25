@@ -96,6 +96,7 @@ pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, int minSamplesForP
     , _movingStdDev         (0)
     , _nextLagWindowIndex   (0)
 {
+    printf("PulseDetect settings threshold(%f) cPulse(%d)\n", threshold, minSamplesForPulse);
     memset(_rgMovingAvg,          0, sizeof(_rgMovingAvg));
     memset(_rgMovingAvgPart,      0, sizeof(_rgMovingAvgPart));
     memset(_rgMovingVariancePart, 0, sizeof(_rgMovingVariancePart));
@@ -198,6 +199,15 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         rgOutMovingVar[i] =     _movingVariance / static_cast<double>(_cLagWindow);
         rgOutMovingStdDev[i] =  _movingStdDev;
         rgOutThreshold[i] =     _movingAvg + (_threshold * _movingStdDev);
+
+#if 0
+        printf("%f %f %f %f %f\n",
+            rgOutPulseValue[i],
+            rgOutMovingAvg[i],
+            rgOutMovingVar[i],
+            rgOutMovingStdDev[i],
+            rgOutThreshold[i]);
+#endif
 
         if (curSampleSeconds - _lastPulseSeconds > _noPulseTime) {
             _lastPulseSeconds = curSampleSeconds; 
