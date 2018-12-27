@@ -85,7 +85,7 @@ pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, int minSamplesForP
     , _minSamplesForPulse   (minSamplesForPulse)
     , _sampleCount          (0)
     , _noPulseTime          (3)
-    , _sampleRate           (3000000.0 / 256.0)
+    , _sampleRate           (3000000.0 / 1024.0)
     , _pulseSampleCount     (0)
     , _pulseMax             (0)
     , _lastPulseSeconds     (0)
