@@ -53,27 +53,3 @@ install(TARGETS gnuradio-VHFPulseDetect
     ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
     RUNTIME DESTINATION bin              # .dll file
 )
-
-########################################################################
-# Build and register unit test
-########################################################################
-include(GrTest)
-
-include_directories(${CPPUNIT_INCLUDE_DIRS})
-
-list(APPEND test_VHFPulseDetect_sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_VHFPulseDetect.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/qa_VHFPulseDetect.cc
-)
-
-add_executable(test-VHFPulseDetect ${test_VHFPulseDetect_sources})
-
-target_link_libraries(
-  test-VHFPulseDetect
-  ${GNURADIO_RUNTIME_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${CPPUNIT_LIBRARIES}
-  gnuradio-VHFPulseDetect
-)
-
-GR_ADD_TEST(test_VHFPulseDetect test-VHFPulseDetect)
