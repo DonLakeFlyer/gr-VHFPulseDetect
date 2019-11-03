@@ -38,13 +38,16 @@ namespace gr {
      public:
       typedef boost::shared_ptr<pulse_detect__ff> sptr;
 
-      static sptr make(float threshold, int minSamplesForPulse);
+      static sptr make(float threshold, float pulseDuration, int sampleRate);
 
       virtual float threshold() const = 0;
       virtual void set_threshold(float threshold) = 0;
 
-      virtual int minSamplesForPulse() const = 0;
-      virtual void set_minSamplesForPulse(int minSamplesForPulse) = 0;
+      virtual int pulseDuration() const = 0;
+      virtual void set_pulseDuration(int pulseDuration) = 0;
+
+      virtual int sampleRate() const = 0;
+      virtual void set_sampleRate(int sampleRate) = 0;
     };
 
   } // namespace VHFPulseDetect

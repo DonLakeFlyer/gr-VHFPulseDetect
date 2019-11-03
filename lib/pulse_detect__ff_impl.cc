@@ -27,9 +27,9 @@
 
 namespace gr { namespace VHFPulseDetect {
 
-pulse_detect__ff::sptr pulse_detect__ff::make(float threshold, int minSamplesForPulse)
+pulse_detect__ff::sptr pulse_detect__ff::make(float threshold, float pulseDuration, int sampleRate)
 {
-    return gnuradio::get_initial_sptr (new pulse_detect__ff_impl(threshold, minSamplesForPulse));
+    return gnuradio::get_initial_sptr (new pulse_detect__ff_impl(threshold, pulseDuration, sampleRate));
 }
 
 
@@ -80,12 +80,13 @@ pulse_detect__ff_impl::~pulse_detect__ff_impl()
     end
 #endif
 
-pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, int minSamplesForPulse)
+pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, float pulseDuration, int sampleRate)
     : gr::sync_block        ("pulse_detect__ff", gr::io_signature::make(1, 1, sizeof(float)), gr::io_signature::make(6, 6, sizeof(float)))
-    , _minSamplesForPulse   (minSamplesForPulse)
+    , _sampleRate           (sampleRate)
+    , _pulseDuration        (pulseDuration)
+    , _minSamplesForPulse   (_sampleRate * _pulseDuration / 2.0f)
     , _sampleCount          (0)
     , _noPulseTime          (3)
-    , _sampleRate           (3000000.0 / (16.0 * 16.0 * 16.0))
     , _pulseSampleCount     (0)
     , _pulseMax             (0)
     , _lastPulseSeconds     (0)
@@ -96,7 +97,7 @@ pulse_detect__ff_impl::pulse_detect__ff_impl(float threshold, int minSamplesForP
     , _movingStdDev         (0)
     , _nextLagWindowIndex   (0)
 {
-    printf("PulseDetect settings threshold(%f) cPulse(%d)\n", threshold, minSamplesForPulse);
+    printf("PulseDetect settings sampleRate(%f) minSamplesForPulse(%d)\n", _sampleRate, _minSamplesForPulse);
     memset(_rgMovingAvg,          0, sizeof(_rgMovingAvg));
     memset(_rgMovingAvgPart,      0, sizeof(_rgMovingAvgPart));
     memset(_rgMovingVariancePart, 0, sizeof(_rgMovingVariancePart));

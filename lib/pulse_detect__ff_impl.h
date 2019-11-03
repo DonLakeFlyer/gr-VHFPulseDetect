@@ -29,14 +29,17 @@ namespace gr {
     class pulse_detect__ff_impl : public pulse_detect__ff
     {
      public:
-        pulse_detect__ff_impl(float threshold, int minSamplesForPulse);
+        pulse_detect__ff_impl(float threshold, float pulseDuration, int sampleRate);
         ~pulse_detect__ff_impl();
 
         virtual float threshold() const { return _threshold; }
         virtual void set_threshold(float threshold) { _threshold = threshold; }
 
-        virtual int minSamplesForPulse() const { return _minSamplesForPulse; }
-        virtual void set_minSamplesForPulse(int minSamplesForPulse) { _minSamplesForPulse = minSamplesForPulse; }
+        virtual int pulseDuration() const { return _pulseDuration; }
+        virtual void set_pulseDuration(int pulseDuration) { _pulseDuration = pulseDuration; }
+
+        virtual int sampleRate() const { return _sampleRate; }
+        virtual void set_sampleRate(int sampleRate) { _sampleRate = sampleRate; }
 
         // Where all the action really happens
         int work(int noutput_items,
@@ -47,9 +50,10 @@ namespace gr {
         static const int _cLagWindow =           175 * 20;
 
         unsigned int _sampleCount;
+        double  _sampleRate;
+        float   _pulseDuration;
         int     _minSamplesForPulse;
         double  _noPulseTime;
-        double  _sampleRate;
         int     _pulseSampleCount;
         float   _pulseMax;
         double  _lastPulseSeconds;
