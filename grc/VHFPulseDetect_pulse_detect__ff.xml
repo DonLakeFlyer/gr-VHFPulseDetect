@@ -4,9 +4,10 @@
   <key>VHFPulseDetect_pulse_detect__ff</key>
   <category>VHFPulseDetect</category>
   <import>import VHFPulseDetect</import>
-  <make>VHFPulseDetect.pulse_detect__ff($threshold, $minSamplesForPulse)</make>
+  <make>VHFPulseDetect.pulse_detect__ff($threshold, $pulseDuration, $sampleRate)</make>
   <callback>set_threshold($threshold)</callback>
-  <callback>set_minSamplesForPulse($minSamplesForPulse)</callback>
+  <callback>set_pulseDuration($pulseDuration)</callback>
+  <callback>set_sampleRate($sampleRate)</callback>
 
   <param>
     <name>Threshold</name>
@@ -15,9 +16,15 @@
     <type>float</type>
   </param>
   <param>
-    <name>Min samples for pulse</name>
-    <key>minSamplesForPulse</key>
-    <value>150</value>
+    <name>Pulse duration</name>
+    <key>pulseDuration</key>
+    <value>0.015</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>Sample rate</name>
+    <key>sampleRate</key>
+    <value>3000000</value>
     <type>int</type>
   </param>
 
