@@ -47,27 +47,27 @@ namespace gr {
            gr_vector_void_star &output_items);
 
      private:
-        static const int _cLagWindow =           175 * 20;
 
-        unsigned int _sampleCount;
+        unsigned int _sampleCount       = 0;
         double  _sampleRate;
         float   _pulseDuration;
         int     _minSamplesForPulse;
-        double  _noPulseTime;
-        int     _pulseSampleCount;
-        float   _pulseMax;
-        double  _lastPulseSeconds;
-        bool    _trackingPossiblePulse;
-        float   _threshold;
-        double  _movingAvg;
-        double  _movingVariance;
-        double  _movingStdDev;
-        double  _rgMovingAvg[_cLagWindow];
-        double  _rgMovingAvgPart[_cLagWindow];
-        double  _rgMovingVariancePart[_cLagWindow];
-        int     _nextLagWindowIndex;
+        double  _noPulseTimeSecs        = 3;
+        int     _pulseSampleCount       = 0;
+        float   _pulseMax               = 0;
+        double  _lastPulseSeconds       = 0;
+        bool    _trackingPossiblePulse  = false;
+        float   _threshold              = 3.57; // Probability of pulse every two seconds
+        double  _movingAvg              = 0;
+        double  _movingVariance         = 0;
+        int     _cMovingWindow;
+        int     _cLag;
+        double* _rgMovingAvg            = NULL;
+        double* _rgMovingStdDev         = NULL;
+        double* _rgMovingAvgPart        = NULL;
+        double* _rgMovingVariancePart   = NULL;
+        int     _curMovingIndex         = 0;
     };
-
   } // namespace VHFPulseDetect
 } // namespace gr
 
