@@ -134,7 +134,7 @@ int pulse_detect__ff_impl::work(int noutput_items, gr_vector_const_void_star &in
         if (_trackingPossiblePulse) {
             if (pulseValue - laggingAvg < _threshold * laggingStdDev) {
                 if (_pulseSampleCount > _minSamplesForPulse) {
-                    printf("Trailing edge pulseValue(%f) pulseMax(%f) pulseSampleCount(%d)\n", pulseValue, _pulseMax, _pulseSampleCount);
+                    printf("Trailing edge pulseMax(%f) pulseValue(%f) pulseSampleCount(%d)\n", _pulseMax, pulseValue, _pulseSampleCount);
                     rgOutPulseDetect[i] = _pulseMax;
                     _lastPulseSeconds = curSampleSeconds;
                 } else {
